@@ -1,5 +1,4 @@
 window.addEventListener("load", function (event) {
-
     const player = document.querySelector(".player");
     const video = document.querySelector(".player__video");
 
@@ -12,11 +11,13 @@ window.addEventListener("load", function (event) {
     const settingsBtn = document.querySelector(".player__settings");
     const fullScrBtn = document.querySelector(".player__full-screen");
 
-    let currentVolume = 50;
+    const skipStep=5;
+
+    let currentVolume = 0.5;
     let currentTime = 0;
     let duration = 0;
 
-    let timeUpdateInterval=null;
+    let timeUpdateInterval = null;
 
     const currentTimeSpan = document.querySelector(".current-time");
     const durationTimeSpan = document.querySelector(".duration");
@@ -31,7 +32,8 @@ window.addEventListener("load", function (event) {
         minute = minute.toString();
         second = second.toString();
 
-        if (hour != 0) return `${hour}:${minute.padStart(2, "0")}:${second.padStart(2, "0")}`;
+        if (hour != 0)
+            return `${hour}:${minute.padStart(2, "0")}:${second.padStart(2, "0")}`;
         return `${minute.padStart(2, "0")}:${second.padStart(2, "0")}`;
     }
 
@@ -42,13 +44,13 @@ window.addEventListener("load", function (event) {
     }
 
     function handlePlayBtn() {
-        if (!this.classList.contains("playing")) {
+        if (!playBtn.classList.contains("playing")) {
             playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            this.classList.add("playing");
+            playBtn.classList.add("playing");
             video.play();
         } else {
             playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            this.classList.remove("playing");
+            playBtn.classList.remove("playing");
             video.pause();
         }
     }
@@ -76,36 +78,87 @@ window.addEventListener("load", function (event) {
     }
     soundBtn.addEventListener("click", toggleSound);
 
+    // update time and bar
     function updateTime() {
+        console.log("playing triggered");
         timeUpdateInterval = setInterval(() => {
-            durationTimeSpan.innerHTML = toStringTime(duration);
             currentTime = video.currentTime;
             currentTimeSpan.innerHTML = toStringTime(currentTime);
-            let currentLengthOfBar = currentTime / duration * 100;
+            let currentLengthOfBar = (currentTime / duration) * 100;
             progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
             console.log("sss");
         }, 1000);
     }
 
+    /* clear old interval */
     function clearUpdateTime() {
         clearInterval(timeUpdateInterval);
         console.log("pause");
     }
 
+    // when video is ended, change the button
     function updateButton() {
         playBtn.innerHTML = '<i class="fas fa-play"></i>';
         this.classList.remove("playing");
     }
+
     video.addEventListener("playing", updateTime);
     video.addEventListener("pause", clearUpdateTime);
-    video.addEventListener("ended",updateButton);
+    video.addEventListener("ended", updateButton);
+
+    // when mousedown and video is playing, it will clear old Interval, it's also trigger the playing event, mean it's will trigger the update time
+    // and that interval will be deleted when video is paused (pause event) or we mousedown, clear old interval start the new one and so one.
+    // This created because if we don't clear old interval, it's still work, and i think, it will decrease our program speed :)
+    // when mousedown and video is not playing, it won't trigger the playing event, that's mean update time not work, we need to update the time,
+    // the bar, the currentTime. no need to clearinterval because there is no f*cking interval :)) it's was cleared in the previous pause.
+
     function changeVideoTime(event) {
-        clearInterval(timeUpdateInterval);
-        currentTime = event.offsetX / this.offsetWidth * duration;
+        if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+        currentTime = (event.offsetX / this.offsetWidth) * duration;
         video.currentTime = currentTime;
-        let currentLengthOfBar = currentTime / duration * 100;
+        let currentLengthOfBar = (currentTime / duration) * 100;
         progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
+        currentTimeSpan.innerHTML = toStringTime(currentTime);
+        console.log("mousedown triggered");
     }
     progressBar.addEventListener("mousedown", changeVideoTime);
-    progressBar.addEventListener("mousedown", updateTime);
+
+    function toggleFullScreen() {
+        if (player.requestFullscreen) {
+            player.requestFullscreen();
+        } else if (player.mozRequestFullScreen) {
+            /* Firefox */
+            player.mozRequestFullScreen();
+        } else if (player.webkitRequestFullscreen) {
+            /* Chrome, Safari & Opera */
+            player.webkitRequestFullscreen();
+        } else if (player.msRequestFullscreen) {
+            /* IE/Edge */
+            player.msRequestFullscreen();
+        }
+    }
+    fullScrBtn.addEventListener("click", toggleFullScreen);
+
+    function toggleVideoWithoutBtn(event){
+        if(event.target==video) {
+            handlePlayBtn();
+        }
+    }
+    player.addEventListener("click",toggleVideoWithoutBtn);
+
+    function skip(event){
+        if(event.code=="ArrowRight") {
+            clearInterval(timeUpdateInterval);
+            currentTime+=skipStep;
+            video.currentTime=currentTime;
+            currentTimeSpan.innerHTML=toStringTime(currentTime);
+        }
+        if(event.code=="ArrowLeft") {
+            clearInterval(timeUpdateInterval);
+            currentTime-=skipStep;
+            video.currentTime=currentTime;
+            currentTimeSpan.innerHTML=toStringTime(currentTime);
+        }
+    }
+    window.addEventListener("keydown",skip);
 });
