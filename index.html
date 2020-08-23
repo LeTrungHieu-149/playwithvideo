@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML Video Player</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+</head>
+<body>
+	<div class="player">
+		<video class="player__video viewer" src="652333414.mp4"></video>
+      	<div class="player__controls">
+          	<div class="controls__top">
+              	<div class="progress">
+                  	<div class="progress__filled"></div>
+              	</div>
+          	</div>
+          	<div class="controls__bottom">
+              	<div class="controls__bottom-left">
+                  	<button class="player__button player__play">
+						<i class="fas fa-play"></i>
+                  	</button>
+                  	<button class="player__button player__sound">
+						<i class="fas fa-volume-up"></i>
+						<div class="player__sound-wrapper">
+							<input type="range" class="sound__slider" value="50" min="0" max="100">  
+					   </div>
+					</button>
+              		<div class="player__time">
+						<span class="current-time"></span>
+						<span class="duration"></span>
+					</div>
+				</div>
+				<div class="controls__bottom-right">
+					<button class="player__button player__settings">
+					 	<i class="fas fa-cog"></i>
+					</button>
+					<button class="player__button player__full-screen">
+					 	<i class="fas fa-expand"></i>
+					</button>
+         		</div>
+			</div>
+		</div>
+   	</div>
+  <script src="scripts.js"></script>
+</body>
+</html>
