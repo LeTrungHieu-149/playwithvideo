@@ -124,10 +124,15 @@ body {
   right: 0;
   transform: translateY(-50%);
   visibility: hidden;
+  user-select: none;
 }
 
 .progress:hover .progress__filled::after {
   visibility: visible;
+}
+
+.progress--bigger {
+  height: 6px;
 }
 
 /* sound__slider */

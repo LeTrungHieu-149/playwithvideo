@@ -21,6 +21,8 @@ window.addEventListener("load", () => {
     let loadDuration = null;
     let timeoutNotMove = null;
 
+    let mouseIsHolding=0;
+
     const currentTimeSpan = document.querySelector(".current-time");
     const durationTimeSpan = document.querySelector(".duration");
 
@@ -93,20 +95,17 @@ window.addEventListener("load", () => {
 
     // update time and bar
     function updateTime() {
-        console.log("playing triggered");
         timeUpdateInterval = setInterval(() => {
             currentTime = video.currentTime;
             currentTimeSpan.innerHTML = toStringTime(currentTime);
             let currentLengthOfBar = (currentTime / duration) * 100;
             progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
-            console.log("sss");
         }, 1000);
     }
 
     /* clear old interval */
     function clearUpdateTime() {
         clearInterval(timeUpdateInterval);
-        console.log("pause");
     }
 
     // when video is ended, change the button
@@ -133,16 +132,48 @@ window.addEventListener("load", () => {
     // the bar, the currentTime. no need to clear interval because there is no fucking interval :)) it's was cleared in the previous pause.
 
     function changeVideoTime(event) {
+        mouseIsHolding++;
+        makeProgressBarBigger();
         if (timeUpdateInterval) clearInterval(timeUpdateInterval);
         currentTime = (event.offsetX / this.offsetWidth) * duration;
         video.currentTime = currentTime;
         let currentLengthOfBar = (currentTime / duration) * 100;
         progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
         currentTimeSpan.innerHTML = toStringTime(currentTime);
-        console.log("mousedown triggered");
+    }
+
+    function changeVideoTimeWhenHolding(event) {
+        if(mouseIsHolding) {
+            makeProgressBarBigger();
+            if (timeUpdateInterval) clearInterval(timeUpdateInterval);
+            currentTime = (event.offsetX / this.offsetWidth) * duration;
+            video.currentTime = currentTime;
+            let currentLengthOfBar = (currentTime / duration) * 100;
+            progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
+            currentTimeSpan.innerHTML = toStringTime(currentTime);
+        }
+    }
+
+    function makeProgressBarBigger(){
+        progressBar.classList.add("progress--bigger");
+    }
+
+    function resetSizeForProgressBar(){
+        progressBar.classList.remove("progress--bigger")
     }
     progressBar.addEventListener("mousedown", changeVideoTime);
-
+    progressBar.addEventListener("mousemove", changeVideoTimeWhenHolding);
+    progressBar.addEventListener("mouseup",()=>{
+        mouseIsHolding--;
+        resetSizeForProgressBar();
+    });
+    window.addEventListener("mouseup",()=>{
+        if(mouseIsHolding>=1) mouseIsHolding=0;
+        resetSizeForProgressBar();
+    })
+    progressBar.addEventListener("mouseover",makeProgressBarBigger);
+    progressBar.addEventListener("mouseout",resetSizeForProgressBar);
+    
     function toggleFullScreen() {
         if (player.requestFullscreen) {
             player.requestFullscreen();
@@ -200,16 +231,11 @@ window.addEventListener("load", () => {
     player.addEventListener("mouseleave",clearTimeoutWhenNotMove);
 
     function hideControlsWhenNotMove(event){
-        if(video.paused) {
-            console.log("deo dc");
-            return;
-        }
-        console.log("dc ban");
+        if(video.paused) return;
         player.classList.add("is-open");
         clearTimeout(timeoutNotMove);
         timeoutNotMove=setTimeout(()=>{
             player.classList.remove("is-open");
-            console.log("che ne");
         },3000);
     }
 
