@@ -140,13 +140,17 @@ window.addEventListener("load", () => {
         let currentLengthOfBar = (currentTime / duration) * 100;
         progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
         currentTimeSpan.innerHTML = toStringTime(currentTime);
+        window.addEventListener("mousemove",changeVideoTimeWhenHolding);
     }
 
     function changeVideoTimeWhenHolding(event) {
         if(mouseIsHolding) {
+            let currentX=event.pageX-progressBar.getBoundingClientRect().x;
+            if(currentX > 700) currentX=700;
+            if(currentX<0) currentX=0;
             makeProgressBarBigger();
             if (timeUpdateInterval) clearInterval(timeUpdateInterval);
-            currentTime = (event.offsetX / this.offsetWidth) * duration;
+            currentTime = (currentX / progressBar.offsetWidth) * duration;
             video.currentTime = currentTime;
             let currentLengthOfBar = (currentTime / duration) * 100;
             progressFilled.style.flexBasis = `${currentLengthOfBar}%`;
@@ -162,14 +166,13 @@ window.addEventListener("load", () => {
         progressBar.classList.remove("progress--bigger")
     }
     progressBar.addEventListener("mousedown", changeVideoTime);
-    progressBar.addEventListener("mousemove", changeVideoTimeWhenHolding);
-    progressBar.addEventListener("mouseup",()=>{
-        mouseIsHolding--;
-        resetSizeForProgressBar();
-    });
     window.addEventListener("mouseup",()=>{
-        if(mouseIsHolding>=1) mouseIsHolding=0;
-        resetSizeForProgressBar();
+        if(mouseIsHolding) {
+            mouseIsHolding=0;
+            resetSizeForProgressBar();
+            console.log("end trong win");
+            window.removeEventListener("mousemove",changeVideoTimeWhenHolding);
+        }
     })
     progressBar.addEventListener("mouseover",makeProgressBarBigger);
     progressBar.addEventListener("mouseout",resetSizeForProgressBar);

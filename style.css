@@ -105,6 +105,7 @@ body {
   height: 4px;
   display: flex;
   cursor: pointer;
+  user-select: none;
 }
 
 .progress__filled {
@@ -127,7 +128,7 @@ body {
   user-select: none;
 }
 
-.progress:hover .progress__filled::after {
+.progress--bigger .progress__filled::after {
   visibility: visible;
 }
 
