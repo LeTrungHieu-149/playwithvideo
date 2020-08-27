@@ -10,7 +10,6 @@ body {
   margin: 0;
   padding: 0;
   display: flex;
-  background: #7A419B;
   min-height: 100vh;
   background: linear-gradient(135deg, transparent 0%,#444444 68%,#000000 100%);
   background-size: cover;
@@ -20,8 +19,8 @@ body {
 
 .player {
   max-width: 750px;
-  border: 5px solid rgba(0,0,0,0.2);
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  border: 5px solid rgba(0,0,0,.2);
+  box-shadow: 0 0 20px rgba(0,0,0,.2);
   position: relative;
   font-size: 0;
   overflow: hidden;
@@ -52,11 +51,11 @@ body {
   left: 0;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+  background: linear-gradient(to top, rgba(0,0,0,.4), transparent);
   width: 100%;
   padding: 0 20px 10px;
-  transform: translateY(100%);
-  transition: transform 0.3s, visibility 0.1s;
+  transform: translateY(105%);
+  transition: transform .3s, visibility .1s;
 }
 
 .player__controls > * {
@@ -98,34 +97,50 @@ body {
 }
 
 /* progress bar */
-
 .progress {
   width: 100%;
-  background-color: #B4B4B4;
-  height: 4px;
-  display: flex;
+  height: 3px;
+  background-color: rgba(255,255,255,.2);
   cursor: pointer;
   user-select: none;
-}
-
-.progress__filled {
-  flex-basis: 0;
-  background-color: red;
   position: relative;
+  transition: height .2s linear;
 }
 
-.progress__filled::after {
-  content: "";
-  width: 10px;
-  height: 10px;
+.progress__filled, .progress__buffer, .progress__hover-bar {
+  height: 100%;
+  width: 100%;
+  background-color: red;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform: scaleX(0);
+  z-index: 2;
+}
+
+.progress__buffer {
+  background-color: rgba(255,255,255,.4);
+  z-index: -1;
+}
+
+.progress__hover-bar {
+  background-color: rgba(255,255,255,.5);
+  z-index: 1;
+}
+
+.progress__hover-button {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 13px;
+  height: 13px;
   background-color: red;
   border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  visibility: hidden;
-  user-select: none;
+  transform: translate(-90%,4px) scale(0);
+  opacity: 0;
+  transition: opacity .1s;
+  z-index: 5;
 }
 
 .progress--bigger .progress__filled::after {
@@ -133,7 +148,20 @@ body {
 }
 
 .progress--bigger {
-  height: 6px;
+  height: 5px;
+}
+
+.progress::after {
+  content: "";
+  width: 100%;
+  height: 23px;
+  position: absolute;
+  top: -9px;
+}
+
+.progress--bigger .progress__hover-button {
+  transform: translate(-70%,4px) scale(1);
+  opacity: 1;
 }
 
 /* sound__slider */
@@ -161,7 +189,7 @@ body {
   transform: rotate(-45deg);
   top: 0;
   left: 0;
-  transition: width 0.3s;
+  transition: width .3s;
 }
 
 .player__sound.muted > i:after {
@@ -233,7 +261,7 @@ body {
 /* setting */
 
 .player__settings {
-  transition: transform 0.3s;
+  transition: transform .3s;
 }
 
 .player__settings.is-open {
