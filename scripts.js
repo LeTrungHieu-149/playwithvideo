@@ -13,6 +13,7 @@ window.addEventListener("load", () => {
     const soundBtn = document.querySelector(".player__sound i");
     const settingsBtn = document.querySelector(".player__settings");
     const fullScrBtn = document.querySelector(".player__full-screen");
+    const speedListBtn = document.querySelectorAll(".speed__list li");
 
     const currentTimeSpan = document.querySelector(".current-time");
     const durationTimeSpan = document.querySelector(".duration");
@@ -34,12 +35,15 @@ window.addEventListener("load", () => {
         timeInSeconds = parseInt(timeInSeconds);
         let hour = Math.floor(timeInSeconds / 3600);
         let minute = Math.floor((timeInSeconds - hour * 3600) / 60);
-        let second = timeInSeconds - 60 * minute;
+        let second = timeInSeconds - 60 * minute - hour * 3600;
         hour = hour.toString();
         minute = minute.toString();
         second = second.toString();
         if (hour != 0)
-            return `${hour}:${minute.padStart(2, "0")}:${second.padStart(2,"0")}`;
+            return `${hour}:${minute.padStart(2, "0")}:${second.padStart(
+                2,
+                "0"
+            )}`;
         return `${minute.padStart(2, "0")}:${second.padStart(2, "0")}`;
     }
 
@@ -129,13 +133,14 @@ window.addEventListener("load", () => {
     //progress event trigger when video is loading to buffer, update buffer bar's length
     function updateBuffer() {
         bufferIndex = findIndexOfBuffer();
-        let currentLengthOfBufferBar = video.buffered.end(bufferIndex) / duration;
+        let currentLengthOfBufferBar =
+            video.buffered.end(bufferIndex) / duration;
         progressBuffer.style.transform = `scaleX(${currentLengthOfBufferBar})`;
     }
     video.addEventListener("progress", updateBuffer);
-    video.addEventListener("playing", updateBuffer);
+    video.addEventListener("seeked", updateBuffer);
 
-    //when mouse down, trigger change video time,add event listener to check dragging 
+    //when mouse down, trigger change video time,add event listener to check dragging
     function changeVideoTime(event) {
         mouseIsHolding = true;
         let currentX = event.pageX - progressBar.getBoundingClientRect().x;
@@ -151,7 +156,8 @@ window.addEventListener("load", () => {
         if (mouseIsHolding) {
             makeProgressBarBigger();
             let currentX = event.pageX - progressBar.getBoundingClientRect().x;
-            if (currentX > progressBar.offsetWidth) currentX = progressBar.offsetWidth;
+            if (currentX > progressBar.offsetWidth)
+                currentX = progressBar.offsetWidth;
             if (currentX < 0) currentX = 0;
             currentTime = (currentX / progressBar.offsetWidth) * duration;
             video.currentTime = currentTime;
@@ -182,25 +188,47 @@ window.addEventListener("load", () => {
         let currentLengthOfHoverBar = currentX / progressBar.offsetWidth;
         progressHoverBar.style.transform = `scaleX(${currentLengthOfHoverBar})`;
     }
-    progressBar.addEventListener("mouseleave", resetSizeForProgressBarAndHideHoverBar);
-    progressBar.addEventListener("mouseenter",makeProgressBarBigger);
+    progressBar.addEventListener(
+        "mouseleave",
+        resetSizeForProgressBarAndHideHoverBar
+    );
+    progressBar.addEventListener("mouseenter", makeProgressBarBigger);
     progressBar.addEventListener("mousemove", showHoverBar);
 
     //toggle full screen - copy and paste from w3school with love :))
-    function toggleFullScreen() {
-        if (player.requestFullscreen) {
-            player.requestFullscreen();
-        } else if (player.mozRequestFullScreen) {
-            /* Firefox */
-            player.mozRequestFullScreen();
-        } else if (player.webkitRequestFullscreen) {
-            /* Chrome, Safari & Opera */
-            player.webkitRequestFullscreen();
-        } else if (player.msRequestFullscreen) {
-            /* IE/Edge */
-            player.msRequestFullscreen();
+    let toggleFullScreen = (function toggleFullScreenClosure() {
+        let isFullScr = false;
+        function toggle() {
+            if (isFullScr) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    /* IE11 */
+                    document.msExitFullscreen();
+                }
+                isFullScr = false;
+            } else {
+                if (player.requestFullscreen) {
+                    player.requestFullscreen();
+                } else if (player.mozRequestFullScreen) {
+                    /* Firefox */
+                    player.mozRequestFullScreen();
+                } else if (player.webkitRequestFullscreen) {
+                    /* Chrome, Safari & Opera */
+                    player.webkitRequestFullscreen();
+                } else if (player.msRequestFullscreen) {
+                    /* IE/Edge */
+                    player.msRequestFullscreen();
+                }
+                isFullScr = true;
+            }
         }
-    }
+        return toggle;
+    })();
+
     fullScrBtn.addEventListener("click", toggleFullScreen);
 
     //click on video player to toggle video
@@ -211,7 +239,7 @@ window.addEventListener("load", () => {
     }
     player.addEventListener("click", toggleVideoWithoutBtn);
 
-    //skip 
+    //skip
     function skip(event) {
         if (event.code == "ArrowRight") {
             currentTime += skipStep;
@@ -226,7 +254,7 @@ window.addEventListener("load", () => {
     }
     window.addEventListener("keydown", skip);
 
-    //handle setting button, just it's appearance :)) 
+    //handle setting button, just it's appearance :))
     function handleSettings() {
         if (!this.classList.contains("is-open")) {
             this.classList.add("is-open");
@@ -235,6 +263,13 @@ window.addEventListener("load", () => {
         }
     }
     settingsBtn.addEventListener("click", handleSettings);
+
+    speedListBtn.forEach((item) => {
+        item.addEventListener("click", () => {
+            video.playbackRate = item.innerHTML;
+            console.log(video.playbackRate);
+        });
+    });
 
     // if after 3 seconds u don't move your mouse, controls bar will be hidden
     function clearTimeoutWhenNotMove() {
@@ -252,5 +287,4 @@ window.addEventListener("load", () => {
     player.addEventListener("mousemove", hideControlsWhenNotMove);
     player.addEventListener("mouseleave", clearTimeoutWhenNotMove);
     video.addEventListener("pause", clearTimeoutWhenNotMove);
-
 });
