@@ -34,22 +34,13 @@ body {
     overflow: hidden;
 }
 
-.player:fullscreen {
-    max-width: none;
-    width: 100%;
-}
-
-.player:-webkit-full-screen {
-    max-width: none;
-    width: 100%;
-}
-
 .player.is-open .player__controls {
     transform: translateY(0);
 }
 
 .player__video {
     width: 100%;
+    height: 100%;
 }
 
 .player__controls {
@@ -302,9 +293,23 @@ body {
 }
 
 .speed__list > li {
-    padding: 0.7rem;
+    padding: 0.7rem 0.7rem 0.7rem 2.5rem;
+    font-weight: bold;
+    text-align: left;
+    position: relative;
 }
 
 .speed__list > li:hover {
     background-color: #19191940;
+}
+
+.speed__list > li.active {
+    background-color: #191919;
+}
+
+.speed__list > li.active::after {
+    content: "\2713";
+    position: absolute;
+    left: 0.7rem;
+    bottom: 0.7rem;
 }

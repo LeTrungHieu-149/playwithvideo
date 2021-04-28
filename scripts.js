@@ -59,23 +59,49 @@ window.addEventListener("load", () => {
 
     // toggle controls bar
     function toggleControls(event) {
-        if (event.type == "mouseleave" && !video.paused)
+        if (
+            event.type == "mouseleave" &&
+            !video.paused &&
+            !settingsBtn.classList.contains("is-open")
+        )
             player.classList.remove("is-open");
         else player.classList.add("is-open");
     }
     video.addEventListener("pause", toggleControls);
-    player.addEventListener("mouseenter", toggleControls);
+    //player.addEventListener("mouseenter", toggleControls);
     player.addEventListener("mouseleave", toggleControls);
+    // if after 3 seconds u don't move your mouse, controls bar will be hidden
+    function clearTimeoutWhenNotMove() {
+        clearTimeout(timeoutNotMove);
+    }
+
+    function hideControlsWhenNotMove() {
+        clearTimeout(timeoutNotMove);
+        player.classList.add("is-open");
+        timeoutNotMove = setTimeout(() => {
+            if (settingsBtn.classList.contains("is-open")) return;
+            player.classList.remove("is-open");
+        }, 3000);
+    }
+
+    player.addEventListener("mouseleave", clearTimeoutWhenNotMove);
+
+    video.addEventListener("pause", () => {
+        player.removeEventListener("mousemove", hideControlsWhenNotMove);
+        clearTimeoutWhenNotMove();
+    });
+    video.addEventListener("play", () => {
+        player.addEventListener("mousemove", hideControlsWhenNotMove);
+        hideControlsWhenNotMove();
+    });
 
     // toggle player button
     function handlePlayBtn() {
-        if (!playBtn.classList.contains("playing")) {
+        if (video.paused) {
             playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            playBtn.classList.add("playing");
             video.play();
         } else {
             playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            playBtn.classList.remove("playing");
             video.pause();
         }
     }
@@ -90,7 +116,6 @@ window.addEventListener("load", () => {
         currentVolume = video.volume;
     }
     soundRange.addEventListener("input", handleSound);
-
     // toggle sound button
     function toggleSound() {
         if (!this.parentElement.classList.contains("muted")) {
@@ -154,7 +179,6 @@ window.addEventListener("load", () => {
     //when mousemove, check if mouse is holding to seek
     function changeVideoTimeWhenHolding(event) {
         if (mouseIsHolding) {
-            makeProgressBarBigger();
             let currentX = event.pageX - progressBar.getBoundingClientRect().x;
             if (currentX > progressBar.offsetWidth)
                 currentX = progressBar.offsetWidth;
@@ -183,7 +207,7 @@ window.addEventListener("load", () => {
         progressHoverBar.style.transform = `scaleX(0)`;
     }
 
-    function showHoverBar(event) {
+    function updateHoverBar(event) {
         let currentX = event.pageX - progressBar.getBoundingClientRect().x;
         let currentLengthOfHoverBar = currentX / progressBar.offsetWidth;
         progressHoverBar.style.transform = `scaleX(${currentLengthOfHoverBar})`;
@@ -193,54 +217,50 @@ window.addEventListener("load", () => {
         resetSizeForProgressBarAndHideHoverBar
     );
     progressBar.addEventListener("mouseenter", makeProgressBarBigger);
-    progressBar.addEventListener("mousemove", showHoverBar);
+    progressBar.addEventListener("mousemove", updateHoverBar);
 
     //toggle full screen - copy and paste from w3school with love :))
-    let toggleFullScreen = (function toggleFullScreenClosure() {
-        let isFullScr = false;
-        function toggle() {
-            if (isFullScr) {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    /* IE11 */
-                    document.msExitFullscreen();
-                }
-                isFullScr = false;
-            } else {
-                if (player.requestFullscreen) {
-                    player.requestFullscreen();
-                } else if (player.mozRequestFullScreen) {
-                    /* Firefox */
-                    player.mozRequestFullScreen();
-                } else if (player.webkitRequestFullscreen) {
-                    /* Chrome, Safari & Opera */
-                    player.webkitRequestFullscreen();
-                } else if (player.msRequestFullscreen) {
-                    /* IE/Edge */
-                    player.msRequestFullscreen();
-                }
-                isFullScr = true;
+    fullScrBtn.addEventListener("click", (e) => {
+        if (document.fullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                /* Safari */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                /* IE11 */
+                document.msExitFullscreen();
+            }
+        } else {
+            if (player.requestFullscreen) {
+                player.requestFullscreen();
+            } else if (player.mozRequestFullScreen) {
+                /* Firefox */
+                player.mozRequestFullScreen();
+            } else if (player.webkitRequestFullscreen) {
+                /* Chrome, Safari & Opera */
+                player.webkitRequestFullscreen();
+            } else if (player.msRequestFullscreen) {
+                /* IE/Edge */
+                player.msRequestFullscreen();
             }
         }
-        return toggle;
-    })();
-
-    fullScrBtn.addEventListener("click", toggleFullScreen);
+    });
 
     //click on video player to toggle video
     function toggleVideoWithoutBtn(event) {
-        if (event.target == video) {
+        if (
+            event.target == video &&
+            !settingsBtn.classList.contains("is-open")
+        ) {
             handlePlayBtn();
         }
     }
     player.addEventListener("click", toggleVideoWithoutBtn);
 
     //skip
-    function skip(event) {
+    function handleHotKey(event) {
+        console.log(event);
         if (event.code == "ArrowRight") {
             currentTime += skipStep;
             video.currentTime = currentTime;
@@ -251,40 +271,49 @@ window.addEventListener("load", () => {
             video.currentTime = currentTime;
             currentTimeSpan.innerHTML = toStringTime(currentTime);
         }
+        if (event.code == "KeyP") {
+            handlePlayBtn();
+        }
+        // if (event.code == "ArrowUp") {
+        //     currentVolume += 0.05;
+        //     if (currentVolume > 1) currentVolume = 1;
+        //     if (soundBtn.parentElement.classList.contains("muted"))
+        //         soundBtn.parentElement.classList.remove("muted");
+        //     video.volume = currentVolume;
+        // }
+        // if (event.code == "ArrowDown") {
+        //     currentVolume -= 0.05;
+        //     if (currentVolume <= 0) {
+        //         soundBtn.parentElement.classList.add("muted");
+        //         currentVolume = 0;
+        //     }
+        //     video.volume = currentVolume;
+        // }
     }
-    window.addEventListener("keydown", skip);
+    window.addEventListener("keydown", handleHotKey);
 
     //handle setting button, just it's appearance :))
-    function handleSettings() {
+    function handleSettings(e) {
         if (!this.classList.contains("is-open")) {
             this.classList.add("is-open");
         } else {
             this.classList.remove("is-open");
         }
+        e.stopPropagation();
     }
     settingsBtn.addEventListener("click", handleSettings);
 
     speedListBtn.forEach((item) => {
         item.addEventListener("click", () => {
+            speedListBtn.forEach((link) => {
+                link.classList.remove("active");
+            });
             video.playbackRate = item.innerHTML;
-            console.log(video.playbackRate);
+            item.classList.add("active");
         });
     });
 
-    // if after 3 seconds u don't move your mouse, controls bar will be hidden
-    function clearTimeoutWhenNotMove() {
-        clearTimeout(timeoutNotMove);
-    }
-
-    function hideControlsWhenNotMove() {
-        if (video.paused) return;
-        player.classList.add("is-open");
-        clearTimeout(timeoutNotMove);
-        timeoutNotMove = setTimeout(() => {
-            player.classList.remove("is-open");
-        }, 3000);
-    }
-    player.addEventListener("mousemove", hideControlsWhenNotMove);
-    player.addEventListener("mouseleave", clearTimeoutWhenNotMove);
-    video.addEventListener("pause", clearTimeoutWhenNotMove);
+    document.addEventListener("click", () => {
+        settingsBtn.classList.remove("is-open");
+    });
 });
